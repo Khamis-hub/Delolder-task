@@ -1,0 +1,36 @@
+#!/bin/bash
+DAYS=""
+DIRS=()
+OPTS=""
+END_OPTS=0
+FIRST_ARG=1
+DRY=0
+
+for arg in "$@"; do
+    if [ "$END_OPTS" -eq 1 ]; then
+        DIRS+=("$arg")
+    elif [ "$arg" == "--" ]; then
+        END_OPTS=1
+    elif [ "$arg" == "-v" ]; then
+        OPTS="-print"
+    elif [ "$arg" == "-d" ]; then
+        OPTS="-print"
+        DRY=1
+    elif [[ "$arg" == -* ]]; then
+        echo "Error: Unknown option $arg" >&2
+        exit 1
+    else
+        if [ "$FIRST_ARG" -eq 1 ]; then
+            DAYS="$arg"
+            FIRST_ARG=0
+        else
+            DIRS+=("$arg")
+        fi
+    fi
+done
+
+if [ -z "$DAYS" ]; then echo "Error: Missing days" >&2; exit 1; fi
+if [ ${#DIRS[@]} -eq 0 ]; then echo "Error: No directories" >&2; exit 1; fi
+if [ "$DRY" -eq 0 ]; then DELETE="-delete"; fi
+
+find "${DIRS[@]}" -type f -mtime +"$DAYS" $OPTS $DELETE
